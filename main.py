@@ -1,19 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# 1. Generar la señal de datos binarios
+# Generar la señal de datos binarios
 def generar_datos_binarios(mensaje):
     binario = ''.join(format(ord(c), '08b') for c in mensaje)
     return np.array([int(b) for b in binario])
 
-# 2. Implementar la modulación ASK
+# ASK
 def modulacion_ask(binario, frecuencia, tiempo_bit):
     t = np.linspace(0, len(binario) * tiempo_bit, int(len(binario) * tiempo_bit * 1000))
     portadora = np.sin(2 * np.pi * frecuencia * t)
     señal_ask = np.repeat(binario, int(tiempo_bit * 1000)) * portadora
     return t, señal_ask
 
-# 3. Implementar la modulación FSK
+# FSK
 def modulacion_fsk(binario, f0, f1, tiempo_bit):
     t = np.linspace(0, len(binario) * tiempo_bit, int(len(binario) * tiempo_bit * 1000))
     señal_fsk = np.zeros_like(t)
@@ -22,7 +22,7 @@ def modulacion_fsk(binario, f0, f1, tiempo_bit):
         señal_fsk[i * int(tiempo_bit * 1000):(i + 1) * int(tiempo_bit * 1000)] = np.sin(2 * np.pi * f * t[i * int(tiempo_bit * 1000):(i + 1) * int(tiempo_bit * 1000)])
     return t, señal_fsk
 
-# 4. Implementar la modulación PSK
+# PSK
 def modulacion_psk(binario, frecuencia, tiempo_bit):
     t = np.linspace(0, len(binario) * tiempo_bit, int(len(binario) * tiempo_bit * 1000))
     portadora = np.sin(2 * np.pi * frecuencia * t)
@@ -32,14 +32,16 @@ def modulacion_psk(binario, frecuencia, tiempo_bit):
             señal_psk[i * int(tiempo_bit * 1000):(i + 1) * int(tiempo_bit * 1000)] *= -1
     return t, señal_psk
 
-# 5. Imprimir todas las señales en un solo gráfico
+# Imprimir los gráficos de las señales
 def imprimir_graficos(binario, tiempo_bit, t, señal_ask, señal_fsk, señal_psk):
     plt.figure(figsize=(12, 10))
 
     # Señal Binaria
-    plt.subplot(4, 1, 1)# Fila / Columnas / Posición
-    t_bin = np.linspace(0, len(binario) * 1000, len(binario))
-    plt.step(t_bin, binario, where='post')
+    plt.subplot(4, 1, 1)
+    t_bin = np.linspace(0, len(binario) * tiempo_bit, len(binario) + 1)
+    binario_extendido = np.repeat(binario, 2)
+    t_bin_extendido = np.repeat(t_bin, 2)[1:-1]
+    plt.step(t_bin_extendido, binario_extendido, where='post')
     plt.title("Señal Binaria")
     plt.xlabel("Tiempo (s)")
     plt.ylabel("Amplitud")
@@ -72,12 +74,11 @@ def imprimir_graficos(binario, tiempo_bit, t, señal_ask, señal_fsk, señal_psk
     plt.tight_layout()
     plt.show()
 
-# Ejecución del programa
-mensaje = "Bueno"
+mensaje = "Hola Mundo!"
 tiempo_bit = 0.01
-frecuencia = 5000  # 5 kHz
-f0 = 2000  # 2 kHz
-f1 = 5000  # 5 kHz
+frecuencia = 5000  # 5 kHz frecuencia estandar
+f0 = 2000  # 2 kHz frecuencia baja para FSK
+f1 = 5000  # 5 kHz frecuencia alta para FSK
 
 # Generar datos binarios
 binario = generar_datos_binarios(mensaje)
@@ -91,5 +92,5 @@ t, señal_fsk = modulacion_fsk(binario, f0, f1, tiempo_bit)
 # Modulación PSK
 t, señal_psk = modulacion_psk(binario, frecuencia, tiempo_bit)
 
-# Comparar resultados
+# Imprimir graficos
 imprimir_graficos(binario, tiempo_bit, t, señal_ask, señal_fsk, señal_psk)
