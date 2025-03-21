@@ -72,25 +72,23 @@ if __name__ == "__main__":
     # Ruta del archivo .wav
     file_path = "./resources/sound2.wav"
     
-    # 1. Cargar la señal de audio
+    # Cargar la señal de audio
     sample_rate, audio_data = load_audio(file_path)
     duration = len(audio_data) / sample_rate  # Duración de la señal en segundos
 
-    # 2. Generar la onda portadora
+    # Generar la onda portadora
     carrier_freq = 10  # Frecuencia de la portadora en Hz
     time, carrier_wave = generate_carrier_wave(sample_rate, duration, carrier_freq)
 
-    # 3. Modulación AM
+    # Modulación AM
     am_signal = am_modulation(audio_data, carrier_wave)
 
-    # 4. Modulación FM
+    # Modulación FM
     freq_deviation = 5000  # Desviación de frecuencia para FM
     fm_signal = fm_modulation(audio_data, sample_rate, carrier_freq, freq_deviation)
 
-    # 5. Comparar señales
     compare_signals(time, audio_data, am_signal, fm_signal)
     
-    # Reproducir señales
     while True:
         print("\nSeleccione una señal para reproducir:")
         print("1. Señal Original")
