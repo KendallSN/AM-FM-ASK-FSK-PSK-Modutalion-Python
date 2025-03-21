@@ -3,108 +3,119 @@ from scipy.io import wavfile
 import matplotlib.pyplot as plt
 import sounddevice as sd
 
-# 1. Cargar y visualizar la señal de audio
-def load_audio(file_path):
-    sample_rate, audio_data = wavfile.read(file_path)
-    if len(audio_data.shape) > 1:  # Convertir a mono si es estéreo
-        audio_data = audio_data.mean(axis=1)
-    audio_data = audio_data / np.max(np.abs(audio_data))  # Normalizar entre -1 y 1
-    return sample_rate, audio_data
+# Cargar y normalizar la señal de audio
+def cargar_audio(ruta_archivo):
+    frecuencia_muestreo, datos_audio = wavfile.read(ruta_archivo)
+    if len(datos_audio.shape) > 1:
+        datos_audio = datos_audio.mean(axis=1)
+    datos_audio = datos_audio / np.max(np.abs(datos_audio))
+    return frecuencia_muestreo, datos_audio
 
-# 2. Definir la onda portadora
-def generate_carrier_wave(sample_rate, duration, carrier_freq):
-    time = np.linspace(0, duration, int(sample_rate * duration))
-    carrier_wave = np.sin(2 * np.pi * carrier_freq * time)
-    return time, carrier_wave
+# Generar onda portadora
+def generar_portadora(frecuencia_muestreo, duracion, frecuencia_portadora):
+    tiempo = np.linspace(0, duracion, int(frecuencia_muestreo * duracion))
+    onda_portadora = np.sin(2 * np.pi * frecuencia_portadora * tiempo)
+    return tiempo, onda_portadora
 
-# 3. Implementar la modulación AM
-def am_modulation(audio_data, carrier_wave):
-    am_signal = (1 + audio_data) * carrier_wave
-    return am_signal
+# Modulación AM
+def modulacion_am(datos_audio, onda_portadora):
+    senal_am = (1 + datos_audio) * onda_portadora
+    return senal_am
 
-# 4. Implementar la modulación FM
-def fm_modulation(audio_data, sample_rate, carrier_freq, freq_deviation):
-    phase_deviation = np.cumsum(audio_data) / sample_rate
-    time = np.linspace(0, len(audio_data) / sample_rate, len(audio_data))
-    fm_signal = np.sin(2 * np.pi * carrier_freq * time + 2 * np.pi * freq_deviation * phase_deviation)
-    return fm_signal
+# Modulación FM
+def modulacion_fm(datos_audio, frecuencia_muestreo, frecuencia_portadora, desviacion_frecuencia):
+    tiempo = np.linspace(0, len(datos_audio) / frecuencia_muestreo, len(datos_audio))
+    fase = 2 * np.pi * desviacion_frecuencia * np.cumsum(datos_audio) / frecuencia_muestreo
+    senal_fm = np.sin(2 * np.pi * frecuencia_portadora * tiempo + fase)
+    return senal_fm
 
-# 5. Comparación de Resultados
-def compare_signals(time, original_audio, am_signal, fm_signal):
-    plt.figure(figsize=(12, 8))
+# Visualizar señales
+def visualizar_senales(tiempo, audio_original, onda_portadora, senal_am, senal_fm, frecuencia_portadora):
+    
+    plt.figure(figsize=(14, 10))
+    plt.suptitle("Vista Completa de Modulaciones AM y FM", fontsize=16)
 
-    # Señal Original
-    plt.subplot(3, 1, 1)
-    plt.plot(time, original_audio, color='blue')
+    # Señal original
+    plt.subplot(4, 1, 1)
+    plt.plot(tiempo, audio_original, color='blue')
     plt.title("Señal Original")
     plt.xlabel("Tiempo [s]")
     plt.ylabel("Amplitud")
-    plt.grid()
+    plt.grid(True)
 
-    # Señal Modulada AM
-    plt.subplot(3, 1, 2)
-    plt.plot(time, am_signal, color='orange')
+    # Señal Portadora
+    plt.subplot(4, 1, 2)
+    plt.plot(tiempo, onda_portadora, color='purple')
+    plt.title(f"Señal Portadora ({frecuencia_portadora} Hz)")
+    plt.xlabel("Tiempo [s]")
+    plt.ylabel("Amplitud")
+    plt.grid(True)
+
+    # Señal AM
+    plt.subplot(4, 1, 3)
+    plt.plot(tiempo, senal_am, color='orange')
     plt.title("Señal Modulada AM")
     plt.xlabel("Tiempo [s]")
     plt.ylabel("Amplitud")
-    plt.grid()
+    plt.grid(True)
 
-    # Señal Modulada FM
-    plt.subplot(3, 1, 3)
-    plt.plot(time, fm_signal, color='green')
+    # Señal FM
+    plt.subplot(4, 1, 4)
+    plt.plot(tiempo, senal_fm, color='green')
     plt.title("Señal Modulada FM")
     plt.xlabel("Tiempo [s]")
     plt.ylabel("Amplitud")
-    plt.grid()
+    plt.grid(True)
 
     plt.tight_layout()
     plt.show()
 
-# 6. Reproducir señales
-def play_signal(signal, sample_rate):
+
+# Reproducir señales
+def reproducir_senal(senal, frecuencia_muestreo):
     print("Reproduciendo señal...")
-    sd.play(signal, samplerate=sample_rate)
-    sd.wait()  # Esperar a que termine la reproducción
+    sd.play(senal, samplerate=frecuencia_muestreo)
+    sd.wait()
     print("Reproducción terminada.")
 
-# Ejecución del flujo
 if __name__ == "__main__":
-    # Ruta del archivo .wav
-    file_path = "./resources/sound2.wav"
+    
+    ruta_archivo = "./resources/sound2.wav"
     
     # Cargar la señal de audio
-    sample_rate, audio_data = load_audio(file_path)
-    duration = len(audio_data) / sample_rate  # Duración de la señal en segundos
-
-    # Generar la onda portadora
-    carrier_freq = 10  # Frecuencia de la portadora en Hz
-    time, carrier_wave = generate_carrier_wave(sample_rate, duration, carrier_freq)
-
-    # Modulación AM
-    am_signal = am_modulation(audio_data, carrier_wave)
-
-    # Modulación FM
-    freq_deviation = 5000  # Desviación de frecuencia para FM
-    fm_signal = fm_modulation(audio_data, sample_rate, carrier_freq, freq_deviation)
-
-    compare_signals(time, audio_data, am_signal, fm_signal)
+    frecuencia_muestreo, datos_audio = cargar_audio(ruta_archivo)
+    duracion = len(datos_audio) / frecuencia_muestreo
     
+    # Generar la onda portadora
+    frecuencia_portadora = 30  # Hz reducida para que los ciclos sean más visibles
+    tiempo, onda_portadora = generar_portadora(frecuencia_muestreo, duracion, frecuencia_portadora)
+    
+    # Modulación AM 
+    senal_am = modulacion_am(datos_audio, onda_portadora)
+    
+    # Modulación FM
+    desviacion_frecuencia = 4000  # Hz aumentada para ver mejor los cambios de frecuencia
+    senal_fm = modulacion_fm(datos_audio, frecuencia_muestreo, frecuencia_portadora, desviacion_frecuencia)
+    
+    visualizar_senales(tiempo, datos_audio, onda_portadora, senal_am, senal_fm, frecuencia_portadora)
+    
+    # Menú
     while True:
         print("\nSeleccione una señal para reproducir:")
         print("1. Señal Original")
         print("2. Señal Modulada AM")
         print("3. Señal Modulada FM")
         print("4. Salir")
-        choice = input("Ingrese su elección: ")
+        opcion = input("Ingrese su elección: ")
         
-        if choice == "1":
-            play_signal(audio_data, sample_rate)
-        elif choice == "2":
-            play_signal(am_signal, sample_rate)
-        elif choice == "3":
-            play_signal(fm_signal, sample_rate)
-        elif choice == "4":
+        if opcion == "1":
+            reproducir_senal(datos_audio, frecuencia_muestreo)
+        elif opcion == "2":
+            reproducir_senal(senal_am, frecuencia_muestreo)
+        elif opcion == "3":
+            reproducir_senal(senal_fm, frecuencia_muestreo)
+        elif opcion == "4":
             print("Saliendo...")
             break
         else:
-            print("Selecciones una opcion")
+            print("Seleccione una opción válida")
